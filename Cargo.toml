@@ -3,4 +3,4 @@ name = "rust-tactrix-openport"
 version = "0.0.1"
 
 [dependencies]
-libusb = "0.3"
+rusb = "0.5"

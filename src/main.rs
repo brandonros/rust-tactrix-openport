@@ -1,9 +1,9 @@
-extern crate libusb;
+extern crate rusb;
 
 use std::slice;
 use std::time::Duration;
 
-fn send_at_message(device_handle: &libusb::DeviceHandle, out_endpoint: &libusb::EndpointDescriptor, line: String) {
+fn send_at_message<T: rusb::UsbContext>(device_handle: &rusb::DeviceHandle<T>, out_endpoint: &rusb::EndpointDescriptor, line: String) {
   let timeout = Duration::from_secs(0);
   device_handle.write_bulk(out_endpoint.address(), line.as_bytes(), timeout).unwrap();
 }
@@ -36,8 +36,7 @@ fn process_buffer(buffer: &Vec<u8>, handler: fn(Vec<u8>)) -> usize {
 }
 
 fn main() {
-  let context = libusb::Context::new().unwrap();
-  let device = context.devices().unwrap().iter().find(|device| {
+  let device = rusb::devices().unwrap().iter().find(|device| {
     let device_desc = device.device_descriptor().unwrap();
     return device_desc.vendor_id() == 0x0403 && device_desc.product_id() == 0xcc4d;
   }).unwrap();
@@ -49,12 +48,12 @@ fn main() {
   device_handle.claim_interface(interface_desc.interface_number()).unwrap();
   device_handle.set_alternate_setting(interface_desc.interface_number(), interface_desc.setting_number()).unwrap();
   let in_endpoint = interface_desc.endpoint_descriptors().find(|endpoint| {
-    return endpoint.direction() == libusb::Direction::In &&
-      endpoint.transfer_type() == libusb::TransferType::Bulk;
+    return endpoint.direction() == rusb::Direction::In &&
+      endpoint.transfer_type() == rusb::TransferType::Bulk;
   }).unwrap();
   let out_endpoint = interface_desc.endpoint_descriptors().find(|endpoint| {
-    return endpoint.direction() == libusb::Direction::Out &&
-      endpoint.transfer_type() == libusb::TransferType::Bulk;
+    return endpoint.direction() == rusb::Direction::Out &&
+      endpoint.transfer_type() == rusb::TransferType::Bulk;
   }).unwrap();
   // open
   send_at_message(&device_handle, &out_endpoint, format!("\r\n\r\nati\r\n"));
