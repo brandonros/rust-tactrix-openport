@@ -8,6 +8,19 @@ fn send_at_message<T: rusb::UsbContext>(device_handle: &rusb::DeviceHandle<T>, o
   device_handle.write_bulk(out_endpoint.address(), line.as_bytes(), timeout).unwrap();
 }
 
+fn send_can_frame<T: rusb::UsbContext>(device_handle: &rusb::DeviceHandle<T>, out_endpoint: &rusb::EndpointDescriptor, arbitration_id: u32, frame: &[u8]) {
+  let channel_id = 0x05;
+  let data_size = 12; // 8 bytes CAN + 4 bytes arb ID
+  let tx_flags = 0x00; // CAN_11BIT_ID
+  let at_command = format!("att{channel_id} {data_size} {tx_flags}\r\n", channel_id = channel_id, data_size = data_size, tx_flags = tx_flags);
+  let mut buffer: Vec<u8> = vec![];
+  buffer.extend_from_slice(&at_command.as_bytes());
+  buffer.extend_from_slice(&arbitration_id.to_be_bytes());
+  buffer.extend_from_slice(&frame);
+  let timeout = Duration::from_secs(0);
+  device_handle.write_bulk(out_endpoint.address(), &buffer, timeout).unwrap();
+}
+
 fn process_buffer(buffer: &Vec<u8>, handler: fn(Vec<u8>)) -> usize {
   let mut i = 0;
   let mut bytes_processed = 0;
