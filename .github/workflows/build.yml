@@ -1,0 +1,22 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    name: 'build'
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}
+          path: target/release/
