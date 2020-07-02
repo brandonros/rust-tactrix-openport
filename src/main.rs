@@ -1,6 +1,5 @@
 extern crate rusb;
 
-use std::slice;
 use std::time::Duration;
 
 fn send_at_message<T: rusb::UsbContext>(device_handle: &rusb::DeviceHandle<T>, out_endpoint: &rusb::EndpointDescriptor, line: String) {
@@ -85,10 +84,10 @@ fn main() {
   // recv
   let mut buffer: Vec<u8> = vec![];
   loop {
-    let mut vec = Vec::<u8>::with_capacity(in_endpoint.max_packet_size() as usize);
-    let slice = unsafe { slice::from_raw_parts_mut((&mut vec[..]).as_mut_ptr(), vec.capacity()) };
+    let max_packet_size = in_endpoint.max_packet_size() as usize;
+    let mut slice = vec![0; max_packet_size];
     let timeout = Duration::from_secs(0);
-    device_handle.read_bulk(in_endpoint.address(), slice, timeout).unwrap();
+    device_handle.read_bulk(in_endpoint.address(), &mut slice, timeout).unwrap();
     buffer.append(&mut slice.to_vec());
     let handler = |frame: Vec<u8>| { println!("{:?}", frame); };
     let bytes_processed = process_buffer(&buffer, handler);
