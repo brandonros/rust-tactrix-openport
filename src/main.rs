@@ -85,10 +85,10 @@ fn main() {
   let mut buffer: Vec<u8> = vec![];
   loop {
     let max_packet_size = in_endpoint.max_packet_size() as usize;
-    let mut slice = vec![0; max_packet_size];
+    let mut vec = vec![0; max_packet_size];
     let timeout = Duration::from_secs(0);
-    device_handle.read_bulk(in_endpoint.address(), &mut slice, timeout).unwrap();
-    buffer.append(&mut slice.to_vec());
+    device_handle.read_bulk(in_endpoint.address(), &mut vec, timeout).unwrap();
+    buffer.extend(&vec);
     let handler = |frame: Vec<u8>| { println!("{:?}", frame); };
     let bytes_processed = process_buffer(&buffer, handler);
     buffer = buffer[0..bytes_processed].to_vec();
